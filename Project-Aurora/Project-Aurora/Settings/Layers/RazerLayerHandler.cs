@@ -4,6 +4,7 @@ using Aurora.EffectsEngine;
 using Aurora.Profiles;
 using Aurora.Settings.Overrides;
 using Aurora.Utils;
+using Corale.Colore.Razer.Keyboard;
 using Newtonsoft.Json;
 using RazerSdkWrapper;
 using RazerSdkWrapper.Data;
@@ -103,12 +104,41 @@ namespace Aurora.Settings.Layers
 
             if (provider is RzKeyboardDataProvider keyboard)
             {
-                for (var i = 0; i < keyboard.Grids[0].Height * keyboard.Grids[0].Width; i++)
-                    _keyboardColors[i] = keyboard.GetZoneColor(i);
+                byte[] keyboardDataRaw = keyboard.Read();
+                for (var i = 0; i < keyboard.Grids[0].Height * keyboard.Grids[0].Width; i++) {
+                    int staticIdx = 4 + 76 + keyboard.LatestSnapshot * 2968;
+                    int effect = keyboardDataRaw[12 + keyboard.LatestSnapshot * 2968];
+                    int zoneidx = 4 + 76 + 528 + keyboard.LatestSnapshot * 2968 + 4;
+
+                    //                          static data      xor  grid data
+                    int red = (keyboardDataRaw[staticIdx] ^ keyboardDataRaw[zoneidx + 528 + i * 4]);
+                    int green = (keyboardDataRaw[staticIdx + 1] ^ keyboardDataRaw[zoneidx + 528 + 1 + i * 4]);
+                    int blue = (keyboardDataRaw[staticIdx + 2] ^ keyboardDataRaw[zoneidx + 528 + 2 + i * 4]);
+                    int alpha = (keyboardDataRaw[staticIdx + 3] ^ keyboardDataRaw[zoneidx + 528 + 3 + i * 4]);
+                    if(red == 0 && green == 0 && blue == 0 && alpha == 0)
+                    {
+                        red = (keyboardDataRaw[staticIdx] ^ keyboardDataRaw[zoneidx + i * 4]);
+                        green = (keyboardDataRaw[staticIdx + 1] ^ keyboardDataRaw[zoneidx + 1 + i * 4]);
+                        blue = (keyboardDataRaw[staticIdx + 2] ^ keyboardDataRaw[zoneidx + 2 + i * 4]);
+                        alpha = (keyboardDataRaw[staticIdx + 3] ^ keyboardDataRaw[zoneidx + 3 + i * 4]);
+                    }
+                    _keyboardColors[i] = Color.FromArgb(255, red, green, blue);
+                    //_keyboardColors[i] = keyboard.GetZoneColor(i);
+                }
             }
             else if (provider is RzMouseDataProvider mouse)
             {
-                _mouseColor = mouse.GetZoneColor(55);
+                byte[] mouseDataRaw = mouse.Read();
+                int snapIdx = mouseDataRaw[0] - 1;
+                if (snapIdx < 0) snapIdx = 9;
+                int staticIdx = 4 + 160 + 252 + 16 + snapIdx * 448;
+                int zoneidx = 4 + 160 + snapIdx * 448;
+                //                          static data      xor  grid data
+                byte red = (byte)(mouseDataRaw[staticIdx] ^ mouseDataRaw[zoneidx + 55 * 4]);
+                byte green = (byte)(mouseDataRaw[staticIdx + 1] ^ mouseDataRaw[zoneidx + 1 + 55 * 4]);
+                byte blue = (byte)(mouseDataRaw[staticIdx + 2] ^ mouseDataRaw[zoneidx + 2 + 55 * 4]);
+                _mouseColor = Color.FromArgb(255, red, green, blue);
+                //_mouseColor = mouse.GetZoneColor(55);
             }
             else if (provider is RzMousepadDataProvider mousePad)
             {

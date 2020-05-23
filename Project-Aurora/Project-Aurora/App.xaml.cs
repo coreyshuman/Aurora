@@ -327,7 +327,11 @@ namespace Aurora
                 Global.key_recorder = new KeyRecorder(Global.InputEvents);
 
                 Global.logger.Info("Loading RazerSdkManager");
-                if (RzHelper.IsSdkVersionSupported(RzHelper.GetSdkVersion()))
+                var rzVersion = RzHelper.GetSdkVersion();
+                RzSdkVersion rzSdkSupportedToVersion = new RzSdkVersion(3, 12, 10); // razer-xor-workaround
+                var rzSdkEnabled = (rzVersion >= RzHelper.SupportedFromVersion && rzVersion <= rzSdkSupportedToVersion); // razer-xor-workaround
+                // if (RzHelper.IsSdkVersionSupported(RzHelper.GetSdkVersion()))
+                if(rzSdkEnabled)
                 {
                     try
                     {

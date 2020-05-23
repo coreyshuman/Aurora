@@ -131,11 +131,13 @@ namespace Aurora.Settings
             this.updates_autocheck_on_start.IsChecked = Global.Configuration.updates_check_on_start_up;
 
             var rzVersion = RzHelper.GetSdkVersion();
-            var rzSdkEnabled = RzHelper.IsSdkEnabled();
+            RzSdkVersion rzSdkSupportedToVersion = new RzSdkVersion(3, 12, 10); // razer-xor-workaround
+            //var rzSdkEnabled = RzHelper.IsSdkEnabled();
+            var rzSdkEnabled = (rzVersion >= RzHelper.SupportedFromVersion && rzVersion <= rzSdkSupportedToVersion); // razer-xor-workaround
 
             this.razer_wrapper_installed_version_label.Content = rzVersion.ToString();
             this.razer_wrapper_installed_version_label.Foreground = new SolidColorBrush(RzHelper.IsSdkVersionSupported(rzVersion) ? Colors.LightGreen : Colors.PaleVioletRed);
-            this.razer_wrapper_supported_versions_label.Content = $"[{RzHelper.SupportedFromVersion}-{RzHelper.SupportedToVersion}]";
+            this.razer_wrapper_supported_versions_label.Content = $"[{RzHelper.SupportedFromVersion}-{rzSdkSupportedToVersion}]";
 
             if (rzVersion == new RzSdkVersion())
                 this.razer_wrapper_uninstall_button.Visibility = Visibility.Hidden;
