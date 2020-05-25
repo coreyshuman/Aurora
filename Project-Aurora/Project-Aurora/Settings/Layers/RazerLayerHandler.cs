@@ -143,7 +143,18 @@ namespace Aurora.Settings.Layers
             else if (provider is RzMousepadDataProvider mousePad)
             {
                 for (var i = 0; i < mousePad.Grids[0].Height * mousePad.Grids[0].Width; i++)
-                    _mousepadColors[i] = mousePad.GetZoneColor(i);
+                {
+                    byte[] mousePadDataRaw = mousePad.Read();
+                    int snapIdx = mousePadDataRaw[0] - 1;
+                    if (snapIdx < 0) snapIdx = 9;
+                    int staticIdx = 4 + 12 + 32 + snapIdx * 192;
+                    int zoneidx = 4 + 12 + 32 + 4 + snapIdx * 192;
+                    //                          static data      xor  grid data
+                    byte red = (byte)(mousePadDataRaw[staticIdx] ^ mousePadDataRaw[zoneidx + i * 4]);
+                    byte green = (byte)(mousePadDataRaw[staticIdx + 1] ^ mousePadDataRaw[zoneidx + 1 + i * 4]);
+                    byte blue = (byte)(mousePadDataRaw[staticIdx + 2] ^ mousePadDataRaw[zoneidx + 2 + i * 4]);
+                    _mousepadColors[i] = Color.FromArgb(255, red, green, blue);
+                }
             }
             else if (provider is RzAppListDataProvider appList)
             {
